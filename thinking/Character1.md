@@ -248,3 +248,39 @@ var result = buildArray([], 5, 2, 32);
 console.table(result);
 
 ```
+## 第二次作答
+
+### html 页面导入样式时，使用link和@import有什么区别？
+
+- link是XMTHML标签，@import是css标签
+- link支持外链，支持RSS与其他事务，@import只能支持css样式
+- @import一定要在``` <style type="text/css">```内，link不需要
+
+### 圣杯布局和双飞翼布局的理解和区别，并用代码实现
+
+- 圣杯布局和双飞翼布局都是用来固定header footer与左右两侧的aside，中间自适应的一种布局方式
+- 圣杯布局是header footer content-border是流式布局模式，content-border内左右两侧aside为绝对定位布局模式，content使用padding来将内容不被两个aside挡住
+- 双飞翼布局是header footer content-border是流式布局模式，content-border内左右aside为float模式，content为block模式，content内部包含inside-content进行padding隔离
+
+代码略
+
+### 用递归算法实现，数组长度为5且元素的随机数在2-32之间不重复的值
+
+```javascript
+
+function generateArray(arr) {
+  const int_number = Math.floor(2 + Math.random() * 30);
+  if (arr.length === 5) {
+    return arr;
+  } else if (arr.includes(int_number)) {
+    return generateArray(arr);
+  } else {
+    arr.push(int_number);
+    return generateArray;
+  }
+}
+
+var arr = [];
+console.log(generateArray(arr));
+
+```

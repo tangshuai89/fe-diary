@@ -234,4 +234,105 @@ _str.all = str.myTrim('all')
 console.log(_str)
 
 ```
-    
+
+
+## 第二次作答
+
+### html html的元素有哪些 包含h5
+
+```html
+block:
+- h1-h6
+- div
+- p
+- code
+- blockquote
+- header
+- footer
+- aside
+- section
+- article
+- video
+- audio
+- canvas
+- svg及相关
+- img
+- input
+- form
+- button
+- pre
+- ol li
+- ul li
+- dl dt
+
+inline-block:
+- i
+- a
+- span
+- strong
+- em
+- del
+- center
+
+table-ceil:
+- table
+- th tr td
+```
+
+### css CSS3有哪些新增的特性
+
+```css
+box:
+- border-radius
+- border-image
+- box-shadow
+- box-sizing
+
+flex:
+- display: flex
+- flex: number;
+- flex-wrap
+- flex-direction
+- justify-content
+- align-items
+
+animate:
+- trasnform
+- transform3d
+- animation
+- keyframe
+- background: linear-gradient
+
+calculate:
+- rgba
+- calc
+- em
+- rem
+- vm vh
+
+performance:
+- will-change
+- text-emphasis
+- viewport
+
+```
+
+### js 写一个方法去掉字符串中的空格
+
+```javascript
+function testTrim(str) {
+  return str.split(" ").join();
+}
+
+function testTrim(str) {
+  var newstr = ';'
+  for (let i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) !== 32) {
+      newstr += str[i];
+    }
+  }
+  return newstr;
+}
+
+
+```
