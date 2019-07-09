@@ -70,14 +70,14 @@ https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes
 
 ### css 
 
-display: none
-opacity: 0
-visibility: hidden
-z-index: -9999999999999
-transform: scale(0)
-margin-left: -100%
-position: relative; left: -100%
-width: 0; height: 0;
+- display: none
+- opacity: 0
+- visibility: hidden
+- z-index: -9999999999999
+- transform: scale(0)
+- margin-left: -100%
+- position: relative; left: -100%
+- width: 0; height: 0;
 
 ### js
 
