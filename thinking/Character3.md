@@ -8,7 +8,6 @@
 - id
 - data-
 
-
 ### css 在页面中隐藏元素的方法有哪些？
 
 - visible: hidden;
@@ -31,6 +30,66 @@ function actionDeleteLastSpecifiedChar(string_origin, string_del) {
     }
   }
   return position;
+}
+
+```
+
+## 参考答案
+
+### html全局属性
+
+https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes
+
+- accesskey
+- autocapitalize
+- class
+- contenteditable
+- contextmenu
+- data-*
+- dir
+- draggable
+- dropzone
+- exportparts
+- hidden
+- id
+- inputmode
+- is
+- itemid
+- itemprop
+- itemref
+- itemscope
+- itemtype
+- lang
+- part
+- slot
+- spellcheck
+- style
+- tabindex
+- title
+- translate
+
+### css 
+
+display: none
+opacity: 0
+visibility: hidden
+z-index: -9999999999999
+transform: scale(0)
+margin-left: -100%
+position: relative; left: -100%
+width: 0; height: 0;
+
+### js
+
+```javascript
+function delLast (str,del) {
+    if (tpeof str !== 'string') {
+      alert('请确认要删除的对象为字符串！');
+      retrun false;
+    } else {
+      let index = str.lastIndexOf(del);
+      str.substring(0,index ) + str.substring(index+1,str.length);
+    }
 }
 
 ```
