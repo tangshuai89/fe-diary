@@ -255,6 +255,248 @@ class Vinyl extends AggregateRoot<VinylProps> {
 
 ````
 
-**to be continued...**
+> 确定的完整的域模型通过这个模型自身的验证逻辑在内
+
+**Vinyl**是其中**Catalog**子域的应用层内的众多域模型内的一个。
+
+![img](../assets/svg/catalog-subdomain.svg)
+
+好，所以我们大概理解了应用层到底干什么的。现在我们回想一下基础架构层包含了一些外部服务和一些我们不想要混入我们的内部层的业务（controllers，databases，caches，etc）
+
+所以，应用层的角色是什么？
+
+> 应用层包括在我们应用里的一个特殊的子域的用例。
+
+用例描述了应用的特性，他们可能是独立开发的，或者按照史诗项目开发的。
+
+那意味着当我们把用例直接放入子域的时候，我们能马上理解那个子域的功能。
+
+在域开发法则里，用例就是应用服务。除了执行某些域逻辑所需的信息之外，他们还负责检索域实例。
+
+举例来说，在```AcceptOffer(offerId: OfferId)```用例里面，我所有需要的就是```OfferId```.这对我来说不够完成accept这个动作。我需要整个```offer```实例来保存```offer.accept()```然后执行一个```OfferAcceptedEvent```的域事件。为了得到```offer```, 我需要用一个仓库来取回和保存。这是他们如何用域实例来取回和旋转一个执行环境的。
+
+我们来看看我们如何在这些实例下构造一个项目。
+
+### 根据实例构造项目
+
+Bob叔叔定义了一个模式叫做[Screaming Architecture(令人尖叫的架构)](https://www.google.com/search?q=screaming+architecture&oq=screaming+architecture&aqs=chrome..69i57.5406j0j7&sourceid=chrome&ie=UTF-8). 它的意思是通过看这个项目的架构， 他们应该是形象化的对于我们来说：我们正在做的项目类型，还有这个系统包含什么功能。
+
+这是一点点这个white label看起来像什么的东西当我们把它分割为**子域 => 用例 + 实例**
+
+![img](../assets/img/structured-around-use-cases.png)
+
+我们大概看一眼可以知道User子域和catelog子域里面都包含什么和他们要做什么。
+
+
+### 一个用例接口
+
+用例用法则来实现很简单。他们有可选的请求和回应。
+
+```typescript
+
+export interface UseCase<IRequest, IResponse> {
+  execute (request?: IRequest) : Promise<IResponse> | IResponse;
+}
+
+````
+
+执行设计法则“总是面向接口编程，不要上来就实现它”，我们可以创建代表这个用例的一些接口就像这样。
+
+很简单对不对？
+
+### 实现一个用例
+
+我们看看我们怎么实现，我们先做一下catelog子域内的```AddVinylToCatalogUseCase```吧
+
+首先，我们会创建这个类，然后实现这个接口，用any模式作为通用DTO（data transmission objects）
+
+```typescript
+export class AddVinylToCatalogUseCase implements UseCase<any, any> {
+  public async execute (request: any): Promise<any> {
+    return null;
+  }
+}
+```
+
+是的，所以为了更新```Vinyl```，我们需要提供所有必要的银子，也需要```Trader```的id。
+
+我们把所有的放进请求DTO把。
+
+```typescript
+interface AddVinylToCatalogUseCaseRequestDTO {
+  vinylName: string;
+  artistNameOrId: string;
+  traderId: string;
+  genresArray?: string | string[];
+}
+
+export class AddVinylToCatalogUseCase 
+  implements UseCase<AddVinylToCatalogUseCaseRequestDTO, any> {
+    
+  async execute (request: AddVinylToCatalogUseCaseRequestDTO) : Promise<any> {
+    return null;
+  }
+}
+```
+
+我们已经事实上开发了这个用例了。
+
+现在我们的```Vinyl```母类需要一个```Artist```实例，我们需要定义需要返回artist的id还是artistName.
+
+如果请求跪了，我们需要使用结果类来安全的返回或者报错，如果没有的话我们会使用一个```VinylRepo```来保存```Vinyl```。
+
+所以我们现在需要用依赖注入来注入一个VinylRepo和一个ArtistRepo.
+
+我们可以总结出来它作为类的构造依赖。
+
+```typescript
+interface AddVinylToCatalogUseCaseRequestDTO {
+  vinylName: string;
+  artistNameOrId: string;
+  traderId: string;
+  genresArray?: string | string[];
+}
+
+export class AddVinylToCatalogUseCase 
+  implements UseCase<AddVinylToCatalogUseCaseRequestDTO, Result<Vinyl>> {
+
+  private vinylRepo: IVinylRepo;
+  private artistRepo: IArtistRepo;
+
+  constructor (vinylRepo: IVinylRepo, artistRepo: IArtistRepo) {
+    this.vinylRepo = vinylRepo;
+    this.artistRepo = artistRepo;
+  }
+
+  public async execute (request: AddVinylToCatalogUseCaseRequestDTO): Promise<Result<Vinyl>> {
+    return null;
+  }
+}
+```
+
+现在我们再来看看逻辑吧
+
+```typescript
+export interface AddVinylToCatalogUseCaseRequestDTO {
+  vinylName: string;
+  artistNameOrId: string;
+  traderId: string;
+  genresArray?: string | string[];
+}
+
+export class AddVinylToCatalogUseCase 
+  implements UseCase<AddVinylToCatalogUseCaseRequestDTO, Result<Vinyl>> {
+
+  private vinylRepo: IVinylRepo;
+  private artistRepo: IArtistRepo;
+
+  constructor (vinylRepo: IVinylRepo, artistRepo: IArtistRepo) {
+    this.vinylRepo = vinylRepo;
+    this.artistRepo = artistRepo;
+  }
+
+  public async execute (request: AddVinylToCatalogUseCaseRequestDTO): Promise<Result<Vinyl>> {
+    const { vinylName, artistNameOrId, traderId, genresArray } = request;
+    let artist: Artist;
+
+    const isArtistId = TextUtil.isUUID(artistNameOrId);
+
+    if (isArtistId) {
+      artist = await this.artistRepo.findById(artistNameOrId);
+    } else {
+      artist = await this.artistRepo.findByArtistName(artistNameOrId);
+    }
+
+    if (!!artist) {
+      artist = Artist.create({ 
+        name: ArtistName.create(artistNameOrId).getValue(), genres: [] 
+      }).getValue();
+    }
+
+    const vinylOrError = Vinyl.create({
+      title: vinylName,
+      artist: artist,
+      traderId: TraderId.create(new UniqueEntityID(traderId)),
+      genres: []
+    });
+
+    if (vinylOrError.isFailure) {
+      return Result.fail<Vinyl>(vinylOrError.error)
+    } 
+
+    const vinyl = vinylOrError.getValue()
+
+    await this.vinylRepo.save(vinyl);
+    return Result.ok<Vinyl>(vinyl)
+  }
+}
+```
+
+大功告成！现在这个应用看起来怎么样？
+
+### 用例与基础设施层也相关
+
+用例怎么实现都是有可能的。
+
+我们可以提供输入，它们可以执行命令和查询在我们的系统上。
+
+那意味着他们可以挂载在express.js 的controllers或者其他的基础设施层的外部服务上。
+
+```typescript
+import { BaseController } from "../../../../../infra/http/BaseController";
+import { AddVinylToCatalogUseCase } from "./CreateJobUseCase";
+import { DecodedExpressRequest } from "../../../../../domain/types";
+import { AddVinylToCatalogUseCaseRequestDTO } from "./AddVinylToCatalogUseCaseRequestDTO";
+
+export class AddVinylToCatalogUseCaseController extends BaseController {
+  private useCase: AddVinylToCatalogUseCase; 
+
+  public constructor (useCase: AddVinylToCatalogUseCase) {
+    super();
+    this.useCase = useCase;
+  }
+
+  public async executeImpl (): Promise<any> {
+    const req = this.req as DecodedExpressRequest;
+    const { traderId } = req.decoded;
+    const requestDetails = req.body as AddVinylToCatalogUseCaseRequestDTO;
+    const resultOrError = await this.useCase.execute({
+      ...requestDetails,
+      traderId
+    });
+    if (resultOrError.isSuccess) {
+      return this.ok(this.res, resultOrError.getValue());
+    } else {
+      return this.fail(resultOrError.error);
+    }
+  }
+}
+```
+
+用例本身也可以被其他应用层的用例执行（但是根据Bob叔叔的依赖法则来说不能从域层执行）。这些真的太酷了。
+
+### 优雅的使用用例和域事件
+
+事实上有一个非常优雅的方式来连接用例。
+
+你会想把用例们连接在一起当一个事件可能切换另一个用例被执行在特定的场景里。在DDD（域驱动设计）里，我们已经定义了这特个行为通过[Event storming exercise](https://philippe.bourgau.net/how-to-use-event-storming-to-introduce-domain-driven-design/)然后使用观察者模式来发送域事件。
+
+### 提醒交易者当一个项目被添加到心愿名单里
+
+在white label项目内，交易者可以添加艺人或者特殊的唱片到他们的心愿名单里面。如果有人加了一个新的产品到他们的集合里面，对这个特殊的唱片或者艺人感兴趣的交易者们会被提醒它已经发送了。通过这种方式，他们可以为了他们感兴趣的唱片向拥有者发起一个offer。
+
+接下来的这张图解是一个简单的层和用例之间联系的图示。
+
+![img](../assets/svg/diagram.svg)
+
+在此基础上，如果我们想要在史诗里开发我们的子域以微服务替代运行时在一个独立的进程的话，我们可以利用信息破坏者例如[Rabbit MQ](https://www.rabbitmq.com/)或是[Amazon MQ](https://aws.amazon.com/cn/amazon-mq/)
+
+我们会花费尽量少的笔墨来未来的文章里使用观察者模式用一些低耦合的方式来挂载域事件来执行连接好的用例。
+
+### 源码
+
+这篇文章里的代码是从White Label，一个使用DDD模式、用Node.js与Typescript来构建的唱片交易企业级应用。你可以在Github上看[这些代码]
+[https://github.com/stemmlerjs/white-label](https://github.com/stemmlerjs/white-label)
+
 
 
